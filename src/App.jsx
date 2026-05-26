@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { BriefcaseBusiness, PhoneCall, ShieldCheck, User, Users } from "lucide-react";
 import { motion } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 
 const TOTAL_STEPS = 9;
 
@@ -245,6 +246,7 @@ Employment: ${leadData.employmentStatus}`,
 
   return (
     <div className="min-h-screen bg-white text-slate-950">
+      <Analytics />
       <main className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-5 py-8">
         <motion.section
           key={step}
