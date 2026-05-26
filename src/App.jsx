@@ -453,36 +453,7 @@ Employment: ${leadData.employmentStatus}`,
                       </div>
 
                       <div className="mt-8 space-y-6 text-left">
-                        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 text-center">
-                          <div className="mb-4 flex flex-wrap items-center justify-center gap-6 opacity-90">
-                            <img
-                              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Oscar_Health_logo.svg/512px-Oscar_Health_logo.svg.png"
-                              alt="Oscar"
-                              className="h-10 max-w-[130px] object-contain animate-pulse"
-                            />
-                            <img
-                              src="https://1000logos.net/wp-content/uploads/2020/09/Cigna-Logo.png"
-                              alt="Cigna"
-                              className="h-12 max-w-[150px] object-contain animate-pulse"
-                            />
-                            <img
-                              src="https://1000logos.net/wp-content/uploads/2023/03/UnitedHealthcare-logo.png"
-                              alt="UnitedHealthcare"
-                              className="h-10 max-w-[190px] object-contain animate-pulse"
-                            />
-                            <img
-                              src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Blue_Cross_Blue_Shield_logo.svg/512px-Blue_Cross_Blue_Shield_logo.svg.png"
-                              alt="Blue Cross Blue Shield"
-                              className="h-12 max-w-[160px] object-contain animate-pulse"
-                            />
-                          </div>
-
-                          <p className="text-sm font-bold uppercase tracking-[0.2em] text-slate-500">
-                            Gathering quotes from major providers
-                          </p>
-                        </div>
-
-                        <div className="space-y-4 text-left">
+<div className="space-y-4 text-left">
                           <LoadingRow text="Checking available PPO plans" active={loadingProgress > 15} />
                           <LoadingRow text="Comparing rates in your ZIP code" active={loadingProgress > 35} />
                           <LoadingRow text="Reviewing provider availability" active={loadingProgress > 55} />
