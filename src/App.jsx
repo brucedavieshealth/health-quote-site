@@ -194,7 +194,7 @@ export default function App() {
             <div className="space-y-5">
               <section className="rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 px-5 py-10 text-center shadow-xl">
                 <h1 className="text-5xl sm:text-6xl font-black leading-tight">
-                  Get your quote in{" "}
+                  Get your quote in {" "}
                   <span className="text-blue-700">30 seconds!</span>
                 </h1>
 
@@ -282,6 +282,132 @@ export default function App() {
                     className="h-20 w-16 rounded-3xl border border-slate-200 text-center text-3xl font-black"
                   />
                 ))}
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="text-center space-y-8">
+              <h1 className="text-5xl font-black">Date of Birth</h1>
+
+              <div className="flex justify-center items-center gap-3">
+                <input
+                  ref={monthRef}
+                  placeholder="MM"
+                  maxLength={2}
+                  value={dob.month}
+                  onChange={(e) => updateDob("month", e.target.value)}
+                  className="h-20 w-20 rounded-3xl border border-slate-200 text-center text-2xl font-black"
+                />
+
+                <input
+                  ref={dayRef}
+                  placeholder="DD"
+                  maxLength={2}
+                  value={dob.day}
+                  onChange={(e) => updateDob("day", e.target.value)}
+                  className="h-20 w-20 rounded-3xl border border-slate-200 text-center text-2xl font-black"
+                />
+
+                <input
+                  ref={yearRef}
+                  placeholder="YYYY"
+                  maxLength={4}
+                  value={dob.year}
+                  onChange={(e) => updateDob("year", e.target.value)}
+                  className="h-20 w-28 rounded-3xl border border-slate-200 text-center text-2xl font-black"
+                />
+              </div>
+            </div>
+          )}
+
+          {step === 5 && (
+            <div className="text-center space-y-8">
+              <h1 className="text-5xl font-black">
+                What is your gender?
+              </h1>
+
+              <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                {genderOptions.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      setGender(option);
+                      setTimeout(goNext, 150);
+                    }}
+                    className="rounded-3xl border border-blue-200 bg-white p-6 text-xl font-bold hover:bg-blue-50"
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 6 && (
+            <div className="text-center space-y-6 max-w-2xl mx-auto">
+              <h1 className="text-5xl font-black">
+                Almost done
+              </h1>
+
+              <input
+                placeholder="First Name"
+                value={contact.firstName}
+                onChange={(e) =>
+                  setContact({ ...contact, firstName: e.target.value })
+                }
+                className="h-16 w-full rounded-3xl border border-slate-200 px-6 text-xl font-semibold"
+              />
+
+              <input
+                placeholder="Last Name"
+                value={contact.lastName}
+                onChange={(e) =>
+                  setContact({ ...contact, lastName: e.target.value })
+                }
+                className="h-16 w-full rounded-3xl border border-slate-200 px-6 text-xl font-semibold"
+              />
+
+              <input
+                placeholder="Phone Number"
+                value={contact.phone}
+                onChange={(e) =>
+                  setContact({
+                    ...contact,
+                    phone: formatPhone(e.target.value),
+                  })
+                }
+                className="h-16 w-full rounded-3xl border border-slate-200 px-6 text-xl font-semibold"
+              />
+
+              <button
+                disabled={!contactReady}
+                onClick={submitLead}
+                className="h-16 w-full rounded-3xl bg-blue-600 text-white text-xl font-black disabled:bg-slate-300"
+              >
+                View My Options
+              </button>
+            </div>
+          )}
+
+          {step === LOADING_STEP && (
+            <div className="text-center max-w-2xl mx-auto space-y-8">
+              <h1 className="text-5xl font-black">
+                Gathering your quotes...
+              </h1>
+
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+                <div className="flex justify-between mb-5 text-sm font-bold uppercase text-slate-500">
+                  <span>Checking providers</span>
+                  <span>{loadingProgress}%</span>
+                </div>
+
+                <div className="h-5 bg-slate-100 rounded-full overflow-hidden">
+                  <motion.div
+                    animate={{ width: `${loadingProgress}%` }}
+                    className="h-full bg-blue-600 rounded-full"
+                  />
+                </div>
               </div>
             </div>
           )}
