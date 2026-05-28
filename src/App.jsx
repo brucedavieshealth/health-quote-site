@@ -1,5 +1,15 @@
 import React, { useRef, useState } from "react";
-import { BriefcaseBusiness, PhoneCall, ShieldCheck, User, Users } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  Clock3,
+  Lock,
+  PhoneCall,
+  ShieldCheck,
+  Sparkles,
+  User,
+  Users,
+  Zap,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 const TOTAL_STEPS = 7;
@@ -10,9 +20,9 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xqejgzyv";
 const SMS_WEBHOOK_ENDPOINT = "PASTE_YOUR_SMS_WEBHOOK_URL_HERE";
 
 const coverageOptions = [
-  { label: "Individual", icon: User },
-  { label: "Family", icon: Users },
-  { label: "Other", icon: BriefcaseBusiness },
+  { label: "Individual", icon: User, note: "Just me" },
+  { label: "Family", icon: Users, note: "Me + others" },
+  { label: "Other", icon: BriefcaseBusiness, note: "Not sure yet" },
 ];
 
 const genderOptions = ["Male", "Female"];
@@ -41,7 +51,7 @@ function onlyDigits(value) {
 }
 
 function isFullZip(zipArray) {
-  return zipArray.length === 5 && zipArray.every(Boolean);
+  return Array.isArray(zipArray) && zipArray.length === 5 && zipArray.every(Boolean);
 }
 
 function isFullDob(dob) {
@@ -55,13 +65,23 @@ function formatPhone(value) {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
+function runSmokeTests() {
+  console.assert(onlyDigits("(561) 679-4929") === "5616794929", "onlyDigits removes formatting");
+  console.assert(isFullZip(["3", "3", "4", "2", "8"]), "full ZIP validates");
+  console.assert(!isFullZip(["3", "3", "", "2", "8"]), "incomplete ZIP fails");
+  console.assert(isFullDob({ month: "01", day: "25", year: "1999" }), "full DOB validates");
+  console.assert(formatPhone("5616794929") === "(561) 679-4929", "phone formats correctly");
+}
+
+runSmokeTests();
+
 export default function App() {
   const [step, setStep] = useState(1);
   const [coverage, setCoverage] = useState("");
   const [zip, setZip] = useState(["", "", "", "", ""]);
   const [dob, setDob] = useState({ month: "", day: "", year: "" });
   const [gender, setGender] = useState("");
-const [contact, setContact] = useState({ firstName: "", lastName: "", phone: "" });
+  const [contact, setContact] = useState({ firstName: "", lastName: "", phone: "" });
   const [loadingProgress, setLoadingProgress] = useState(0);
 
   const zipRefs = useRef([]);
@@ -80,7 +100,7 @@ const [contact, setContact] = useState({ firstName: "", lastName: "", phone: "" 
     zipCode: zip.join(""),
     dateOfBirth: `${dob.month}/${dob.day}/${dob.year}`,
     gender,
-firstName: contact.firstName,
+    firstName: contact.firstName,
     lastName: contact.lastName,
     phone: contact.phone,
     submittedAt: new Date().toISOString(),
@@ -131,15 +151,7 @@ firstName: contact.firstName,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             to: "5616794929",
-            message: `New health quote lead:
-
-Name: ${leadData.firstName} ${leadData.lastName}
-Phone: ${leadData.phone}
-ZIP: ${leadData.zipCode}
-DOB: ${leadData.dateOfBirth}
-Coverage: ${leadData.coverage}
-Gender: ${leadData.gender}
-`,
+            message: `New health quote lead:\n\nName: ${leadData.firstName} ${leadData.lastName}\nPhone: ${leadData.phone}\nZIP: ${leadData.zipCode}\nDOB: ${leadData.dateOfBirth}\nCoverage: ${leadData.coverage}\nGender: ${leadData.gender}`,
             lead: leadData,
           }),
         });
@@ -156,18 +168,18 @@ Gender: ${leadData.gender}
     setLoadingProgress(0);
 
     let progressValue = 0;
-    const interval = window.setInterval(() => {
+
+    const progressInterval = window.setInterval(() => {
       progressValue += Math.floor(Math.random() * 10) + 6;
 
       if (progressValue >= 100) {
         progressValue = 100;
         setLoadingProgress(100);
-        window.clearInterval(interval);
+        window.clearInterval(progressInterval);
 
         window.setTimeout(() => {
           setStep(FINAL_STEP);
         }, 700);
-
         return;
       }
 
@@ -240,8 +252,21 @@ Gender: ${leadData.gender}
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-950">
-      <main className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-4 py-5 sm:px-5 sm:py-8">
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,#dbeafe,transparent_32%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] text-slate-950">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{ x: [0, 40, 0], y: [0, -30, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-blue-300/20 blur-3xl"
+        />
+        <motion.div
+          animate={{ x: [0, -50, 0], y: [0, 40, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute right-0 top-1/3 h-80 w-80 rounded-full bg-sky-300/20 blur-3xl"
+        />
+      </div>
+
+      <main className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-5 sm:px-5 sm:py-8">
         <motion.section
           key={step}
           initial={{ opacity: 0, y: 14 }}
@@ -249,28 +274,40 @@ Gender: ${leadData.gender}
           transition={{ duration: 0.25 }}
           className="w-full"
         >
-          <div className="border-0 bg-white shadow-none">
-            <div className="space-y-7 p-0 sm:space-y-10">
-              <ProgressBar step={step} totalSteps={TOTAL_STEPS} progress={progress} label={progressLabel} />
+          <motion.div
+            initial={{ scale: 0.98, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.35 }}
+            className="relative rounded-[2rem] border border-white/70 bg-white/80 p-4 shadow-2xl shadow-blue-100/50 backdrop-blur sm:p-7"
+          >
+            <div className="space-y-7 sm:space-y-9">
+              <div className="mb-2 flex items-center justify-center">
+                <div className="select-none text-2xl font-black tracking-tight text-slate-800">
+                  COVER<span className="text-blue-600">A</span>
+                </div>
+              </div>
 
-              
+              <ProgressBar step={step} totalSteps={TOTAL_STEPS} progress={progress} label={progressLabel} />
 
               {step === 1 && <LandingHero onStart={goNext} />}
 
               {step === 2 && (
-                <QuestionBlock title="What type of coverage are you looking for?" subtitle="Select one option to continue.">
-                  <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 md:grid-cols-3">
-                    {coverageOptions.map(({ label, icon: Icon }) => (
+                <QuestionBlock eyebrow="Coverage type" title="What type of coverage are you looking for?" subtitle="Pick the option that best fits your situation.">
+                  <div className="mx-auto grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-3">
+                    {coverageOptions.map(({ label, icon: Icon, note }) => (
                       <OptionButton
                         key={label}
                         selected={coverage === label}
                         onClick={() => chooseAndContinue(setCoverage, label, "coverage")}
-                        className="flex items-center gap-4 text-left"
+                        className="group flex items-center gap-4 text-left"
                       >
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
-                          <Icon size={24} />
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-700 transition group-hover:bg-blue-600 group-hover:text-white">
+                          <Icon size={25} />
                         </div>
-                        <span>{label}</span>
+                        <div>
+                          <div>{label}</div>
+                          <div className="mt-1 text-sm font-semibold text-slate-500">{note}</div>
+                        </div>
                       </OptionButton>
                     ))}
                   </div>
@@ -278,7 +315,7 @@ Gender: ${leadData.gender}
               )}
 
               {step === 3 && (
-                <QuestionBlock title="Compare Rates In Your Area Instantly" subtitle="Enter your ZIP code to continue.">
+                <QuestionBlock eyebrow="Local rates" title="Compare rates in your area instantly" subtitle="Enter your ZIP code to check available options near you.">
                   <div className="space-y-5">
                     <div className="flex justify-center gap-2 sm:gap-3">
                       {zip.map((digit, index) => (
@@ -296,21 +333,21 @@ Gender: ${leadData.gender}
                         />
                       ))}
                     </div>
-                    <p className="text-center text-base text-slate-500 sm:text-lg">We use this to check plan options in your area.</p>
+                    <TrustNote />
                   </div>
                 </QuestionBlock>
               )}
 
               {step === 4 && (
-                <QuestionBlock title="Date of Birth" subtitle="Enter your birthdate to continue.">
+                <QuestionBlock eyebrow="Age-based options" title="Date of birth" subtitle="Some rates and options may vary based on age.">
                   <div className="space-y-6">
-                    <div className="mx-auto max-w-3xl rounded-2xl bg-blue-50 px-5 py-4 text-center">
+                    <div className="mx-auto max-w-3xl rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-center">
                       <p className="text-sm font-semibold text-slate-700 md:text-base">
-                        Depending on your age, insurance providers may offer discounted rates
+                        Depending on your age, insurance providers may offer discounted rates.
                       </p>
                     </div>
 
-                    <div className="mx-auto flex max-w-md items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 px-6 py-5 focus-within:border-blue-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100">
+                    <div className="mx-auto flex max-w-md items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 px-6 py-5 shadow-inner focus-within:border-blue-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100">
                       <input
                         ref={monthRef}
                         inputMode="numeric"
@@ -348,7 +385,7 @@ Gender: ${leadData.gender}
               )}
 
               {step === 5 && (
-                <QuestionBlock title="What is your gender?" subtitle="Select one option to continue.">
+                <QuestionBlock eyebrow="Basic details" title="What is your gender?" subtitle="Select one option to continue.">
                   <div className="mx-auto grid max-w-2xl grid-cols-1 gap-4 md:grid-cols-2">
                     {genderOptions.map((option) => (
                       <OptionButton key={option} selected={gender === option} onClick={() => chooseAndContinue(setGender, option, "gender")}>
@@ -359,10 +396,8 @@ Gender: ${leadData.gender}
                 </QuestionBlock>
               )}
 
-              
-
               {step === 6 && (
-                <QuestionBlock title="Almost done" subtitle="Enter your information to view your options.">
+                <QuestionBlock eyebrow="Final step" title="Almost done" subtitle="Where should an agent send your options?">
                   <div className="mx-auto flex max-w-2xl flex-col gap-5">
                     <TextInput
                       type="text"
@@ -387,7 +422,7 @@ Gender: ${leadData.gender}
                       type="button"
                       disabled={!contactReady}
                       onClick={submitLeadAndStartLoading}
-                      className="h-16 rounded-3xl bg-blue-600 text-xl font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                      className="h-16 rounded-3xl bg-blue-600 text-xl font-black text-white shadow-xl shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
                     >
                       View My Options
                     </button>
@@ -396,15 +431,20 @@ Gender: ${leadData.gender}
               )}
 
               {step === LOADING_STEP && (
-                <QuestionBlock title="Gathering your quotes..." subtitle="Comparing plans and checking available rates in your area.">
+                <QuestionBlock eyebrow="Live quote check" title="Gathering your quotes..." subtitle="Comparing available plan options in your area.">
                   <div className="mx-auto max-w-2xl space-y-8">
-                    <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+                    <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-100">
                       <div className="mb-6 flex items-center justify-between text-sm font-bold uppercase tracking-widest text-slate-500">
                         <span>Checking providers</span>
                         <span>{loadingProgress}%</span>
                       </div>
 
-                      <div className="h-5 overflow-hidden rounded-full bg-slate-100">
+                      <div className="relative h-5 overflow-hidden rounded-full bg-slate-100">
+                        <motion.div
+                          animate={{ x: ["-100%", "300%"] }}
+                          transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                          className="absolute inset-y-0 w-24 bg-white/40 blur-md"
+                        />
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${loadingProgress}%` }}
@@ -440,7 +480,7 @@ Gender: ${leadData.gender}
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         </motion.section>
       </main>
     </div>
@@ -449,34 +489,79 @@ Gender: ${leadData.gender}
 
 function LandingHero({ onStart }) {
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
-      <section className="rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 px-5 py-10 text-center shadow-2xl shadow-blue-100/50 md:px-10 md:py-14">
-        <div className="mb-5 flex items-center justify-center gap-2 text-slate-600">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-xl font-black text-white shadow-lg">+</div>
-          <span className="text-lg font-bold md:text-2xl">Quick. Easy. Secure.</span>
+    <div className="mx-auto max-w-6xl space-y-5">
+      <section className="relative overflow-hidden rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 px-5 py-8 shadow-2xl shadow-blue-100/60 md:px-10 md:py-12">
+        <div className="absolute -right-20 -top-20 h-52 w-52 rounded-full bg-blue-200/40 blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-sky-200/40 blur-3xl" />
+
+        <div className="relative flex flex-col items-center justify-center text-center">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mb-5 flex items-center justify-center">
+              <div className="inline-flex items-center justify-center gap-2 rounded-full border border-blue-100 bg-white/80 px-4 py-2 text-slate-600 shadow-sm">
+              <Sparkles size={18} className="text-blue-600" />
+              <span className="text-sm font-black uppercase tracking-[0.16em]">Quick. Easy. Secure.</span>
+            </div>
+            </div>
+
+            <h1 className="mx-auto max-w-4xl text-5xl font-black leading-tight tracking-tight text-slate-950 md:text-7xl">
+              Get your quote in <span className="text-blue-700">30 seconds!</span>
+            </h1>
+
+            <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-600 md:text-lg">
+              Compare available health coverage options near you in a few quick steps.
+            </p>
+
+            <div className="mx-auto mt-5 flex max-w-md flex-wrap items-center justify-center gap-2">
+              <HeroProof icon={Clock3} text="30 sec" />
+              <HeroProof icon={Lock} text="Secure" />
+              <HeroProof icon={Zap} text="Fast" />
+            </div>
+
+            <motion.div
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+              className="mt-5"
+            >
+              <div className="inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-2 text-sm font-bold text-green-700 shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                Live quote system active
+              </div>
+            </motion.div>
+
+            <button
+              type="button"
+              onClick={onStart}
+              className="mt-8 h-16 w-full max-w-md rounded-3xl bg-blue-600 px-8 text-xl font-black text-white shadow-xl shadow-blue-200 transition hover:-translate-y-1 hover:scale-[1.02] hover:bg-blue-700"
+            >
+              Start My Quote
+            </button>
+
+            <p className="mt-5 flex items-center justify-center gap-2 text-sm font-semibold text-slate-500">
+              <Lock size={15} /> Your information is encrypted and only used to review options.
+            </p>
+          </div>
         </div>
-
-        <h1 className="mx-auto max-w-4xl text-5xl font-black leading-tight tracking-tight text-slate-950 md:text-7xl">
-          Get your quote in <span className="block text-blue-700">30 seconds!</span>
-        </h1>
-
-        <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600 md:text-xl">
-          Answer a few quick questions to compare available health coverage options in your area.
-        </p>
-
-        <button
-          type="button"
-          onClick={onStart}
-          className="mt-8 h-16 w-full max-w-md rounded-3xl bg-blue-600 px-8 text-xl font-black text-white shadow-xl shadow-blue-200 transition hover:bg-blue-700"
-        >
-          Start My Quote
-        </button>
-
-        <p className="mt-5 text-sm font-semibold text-slate-500">🔒 Your information is safe and secure.</p>
       </section>
 
       <ProviderStrip />
     </div>
+  );
+}
+
+function HeroProof({ icon: Icon, text }) {
+  return (
+    <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white/80 px-3 py-3 text-sm font-bold text-slate-700 shadow-sm">
+      <Icon size={17} className="text-blue-600" />
+      {text}
+    </div>
+  );
+}
+
+function TrustNote() {
+  return (
+    <p className="mx-auto flex max-w-md items-center justify-center gap-2 rounded-full bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-500">
+      <Lock size={14} /> Used only to check plan options near you.
+    </p>
   );
 }
 
@@ -497,19 +582,15 @@ function ProviderStrip() {
 
 function BottomProviderStrip() {
   return (
-    <div className="mx-auto mt-8 flex max-w-5xl flex-wrap items-center justify-center gap-4 rounded-[2rem] border border-slate-200 bg-white px-5 py-5 shadow-lg shadow-slate-100">
-      {providerBadges.map((provider) => (
-        <div
-          key={provider.name}
-          className="flex h-20 w-40 items-center justify-center rounded-2xl bg-slate-50 px-4 py-3"
-        >
-          <img
-            src={provider.logo}
-            alt={provider.name}
-            className="max-h-14 max-w-full object-contain"
-          />
-        </div>
-      ))}
+    <div className="mx-auto mt-8 max-w-5xl rounded-[2rem] border border-slate-200 bg-white px-4 py-5 shadow-lg shadow-slate-100">
+      <p className="mb-4 text-center text-xs font-black uppercase tracking-[0.2em] text-slate-500">Major providers may include</p>
+      <div className="grid grid-cols-2 items-center gap-3 sm:grid-cols-4">
+        {providerBadges.map((provider) => (
+          <div key={provider.name} className="flex h-24 items-center justify-center rounded-2xl bg-slate-50 px-4 py-4 ring-1 ring-slate-100">
+            <img src={provider.logo} alt={provider.name} className="max-h-16 max-w-full object-contain" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -531,12 +612,13 @@ function ProgressBar({ step, totalSteps, progress, label }) {
   );
 }
 
-function QuestionBlock({ title, subtitle, children }) {
+function QuestionBlock({ eyebrow, title, subtitle, children }) {
   return (
     <div className="space-y-8 text-center">
       <div className="space-y-4">
+        {eyebrow && <p className="text-xs font-black uppercase tracking-[0.22em] text-blue-700">{eyebrow}</p>}
         <h1 className="mx-auto max-w-4xl text-4xl font-black leading-tight tracking-tight text-slate-950 md:text-6xl">{title}</h1>
-        {subtitle && <p className="text-xl text-slate-500">{subtitle}</p>}
+        {subtitle && <p className="mx-auto max-w-2xl text-lg leading-8 text-slate-500 md:text-xl">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -548,7 +630,7 @@ function OptionButton({ selected, onClick, className = "", children }) {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-2xl border px-6 py-5 text-xl font-extrabold transition-all hover:border-blue-600 hover:bg-blue-50 ${
+      className={`rounded-2xl border px-6 py-5 text-xl font-extrabold shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-600 hover:bg-blue-50 hover:shadow-lg ${
         selected ? "border-blue-600 bg-blue-50 text-blue-700 ring-4 ring-blue-100" : "border-blue-500 bg-white text-blue-700"
       } ${className}`}
     >
@@ -577,8 +659,8 @@ function TextInput(props) {
 
 function QuoteSubmittedPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white p-6">
-      <div className="w-full max-w-2xl rounded-[2rem] border-0 bg-white p-8 text-center shadow-2xl ring-1 ring-slate-200 md:p-12">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,#dbeafe,transparent_32%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-6">
+      <div className="w-full max-w-2xl rounded-[2rem] border border-white bg-white p-8 text-center shadow-2xl shadow-blue-100/50 ring-1 ring-slate-200 md:p-12">
         <div className="space-y-8">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600">
             <ShieldCheck size={42} />
@@ -587,44 +669,64 @@ function QuoteSubmittedPage() {
           <div className="space-y-4">
             <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">Thanks, you're all set.</h1>
             <p className="mx-auto max-w-xl text-lg leading-8 text-slate-600">
-              Your information has been received successfully. A licensed agent will contact you shortly to review available health coverage options and deliver your quotes.
+              Your information has been received successfully. A licensed agent will review available plan options and reach out shortly.
             </p>
           </div>
 
-          <div className="rounded-3xl bg-slate-50 p-6 text-left ring-1 ring-slate-200">
+          <div className="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-blue-50 to-white p-6 text-left shadow-sm">
+            <div className="mb-4 flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-blue-700">
+              <Sparkles size={16} /> Gathering quotes from providers such as
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {providerBadges.map((provider) => (
+                <div key={provider.name} className="flex h-20 items-center justify-center rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-100">
+                  <img src={provider.logo} alt={provider.name} className="max-h-12 max-w-full object-contain" />
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-4 text-sm leading-6 text-slate-500">
+              Plans, availability, and eligibility vary by ZIP code and applicant information.
+            </p>
+          </div>
+
+          <div className="rounded-[2rem] bg-blue-600 p-6 text-left text-white shadow-xl shadow-blue-200">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white">
                 <PhoneCall size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Want an instant quote?</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">Tap below to speak with an agent now.</p>
+                <h3 className="text-2xl font-black">Want your quote faster?</h3>
+                <p className="mt-2 text-sm font-semibold leading-6 text-blue-50">
+                  Call now and an agent can review your available options right away instead of waiting for a callback.
+                </p>
               </div>
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <a href="tel:5616794929" className="block">
+            <a href="tel:+15616794929" className="block">
               <button
                 type="button"
                 onClick={() => {
-                  window.location.href = "tel:5616794929";
+                  window.location.href = "tel:+15616794929";
                 }}
-                className="h-14 w-full rounded-2xl bg-blue-600 text-base font-bold text-white shadow-xl hover:bg-blue-700"
+                className="h-16 w-full rounded-2xl bg-green-600 text-lg font-black text-white shadow-xl shadow-green-200 transition hover:-translate-y-0.5 hover:bg-green-700"
               >
-                Call Now • 561-679-4929
+                Call Now for Instant Quote
               </button>
             </a>
 
-            <a href="sms:5616794929" className="block">
+            <a href="sms:+15616794929" className="block">
               <button
                 type="button"
                 onClick={() => {
-                  window.location.href = "sms:5616794929";
+                  window.location.href = "sms:+15616794929";
                 }}
-                className="h-14 w-full rounded-2xl border-2 border-blue-600 bg-white text-base font-bold text-blue-700 hover:bg-blue-50"
+                className="h-16 w-full rounded-2xl border-2 border-blue-600 bg-white text-lg font-black text-blue-700 transition hover:bg-blue-50"
               >
-                Text Now • 561-679-4929
+                Text Me Instead
               </button>
             </a>
           </div>
